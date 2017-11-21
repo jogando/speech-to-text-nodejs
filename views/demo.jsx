@@ -16,17 +16,49 @@ import cachedModels from '../src/data/models.json';
 
 const ERR_MIC_NARROWBAND = 'Microphone transcription cannot accommodate narrowband voice models, please select a broadband one.';
 
+
+const reportDefinition = [{
+  name: "Finanzas",
+  fields: [
+    {
+      name: "Año fiscal"
+    },
+    {
+      name: "Monto"
+    },
+    {
+      name: "Fondo"
+    }]
+  },
+{
+  name: "Payroll",
+  fields: [{
+    name: "Grupo de empleado"
+  },
+  {
+    name: "Subgrupo de empleado"
+  },
+  {
+    name: "Org Unit"
+  },
+  {
+    name: "Salario"
+  }]
+}];
+
 export default React.createClass({
   displayName: 'Demo',
-
   getInitialState() {
     return {
-      model: 'en-US_BroadbandModel',
+      model: 'es-ES_BroadbandModel',
       rawMessages: [],
       formattedMessages: [],
       audioSource: null,
+      selectedReport: null,
+      selectedFields: [],
+      selectedFilters:[],
       speakerLabels: true,
-      keywords: this.getKeywords('en-US_BroadbandModel'),
+      keywords: this.getKeywords('es-ES_BroadbandModel'),
       // transcript model and keywords are the state that they were when the button was clicked.
       // Changing them during a transcription would cause a mismatch between the setting sent to the
       // service and what is displayed on the demo, and could cause bugs.
@@ -277,9 +309,11 @@ export default React.createClass({
 
   handleModelChange(model) {
     this.reset();
-    this.setState({ model,
+    this.setState({
+      model,
       keywords: this.getKeywords(model),
-      speakerLabels: this.supportsSpeakerLabels(model) });
+      speakerLabels: this.supportsSpeakerLabels(model)
+    });
 
     // clear the microphone narrowband error if it's visible and a broadband model was just selected
     if (this.state.error === ERR_MIC_NARROWBAND && !this.isNarrowBand(model)) {
@@ -355,6 +389,56 @@ export default React.createClass({
     this.setState({ error: err.message || err });
   },
 
+  getReports(){
+    return ( 
+      <div>
+      {
+        reportDefinition.map((item,index)=>(
+          <button 
+            className={item.name == this.state.selectedReport ? "base--button" : "base--button base--button_black"} key={item.name} onClick={() => this.toggleReport(item.name)}>
+            {item.name}
+          </button>
+        )
+      )}
+      </div>
+    )
+  },
+
+  getFields(){
+    var selectedReport = reportDefinition.filter((item)=>{return item.name==this.state.selectedReport})[0];
+
+    if(selectedReport){
+      return (
+        selectedReport.fields
+          .map((item,index)=>(
+            <button className={this.state.selectedFields.indexOf(item.name)>-1 ? "base--button" : "base--button base--button_black"}
+              key={item.name} onClick={() => this.toggleField(item.name)}>
+              {item.name}
+            </button>
+          )
+        )
+      )
+    }
+  },
+
+  toggleReport(reportName){
+    this.setState({selectedReport: reportName, selectedFields: []});
+  },
+
+  toggleField(fieldName){
+    var selectedReport = reportDefinition.filter((item)=>{return item.name==this.state.selectedReport})[0];
+    var selectedField = selectedReport.fields.filter((item)=>{return item.name==fieldName})[0];
+
+    var fieldExists = this.state.selectedFields.indexOf(fieldName)>-1;
+    var selectedFields = this.state.selectedFields;
+    if(fieldExists){
+      selectedFields.splice(this.state.selectedFields.indexOf(fieldName),1);
+    }else{
+      selectedFields.push(selectedField.name);
+    }
+    this.setState({selectedFields: selectedFields});
+  },
+
   render() {
     const buttonsEnabled = !!this.state.token;
     const buttonClass = buttonsEnabled
@@ -399,77 +483,6 @@ export default React.createClass({
         }}
       >
 
-        <div className="drop-info-container">
-          <div className="drop-info">
-            <h1>Drop an audio file here.</h1>
-            <p>{'Watson Speech to Text supports .mp3, .mpeg, .wav, .opus, and .flac files up to 200mb.'}</p>
-          </div>
-        </div>
-
-        <h2 className="base--h2">Transcribe Audio</h2>
-
-        <ul className="base--ul">
-          {micBullet}
-          <li className="base--li">{'Upload pre-recorded audio (.mp3, .mpeg, .wav, .flac, or .opus only).'}</li>
-          <li className="base--li">Play one of the sample audio files.*</li>
-        </ul>
-
-        <div className="smalltext">
-          {'*Both US English broadband sample audio files are covered under the Creative Commons license.'}
-        </div>
-
-        <div style={{
-          paddingRight: '3em',
-          paddingBottom: '2em',
-        }}
-        >
-          The returned result includes the recognized text, {' '}
-          <a className="base--a" href="https://console.bluemix.net/docs/services/speech-to-text/output.html#output">word alternatives</a>, {' '}
-          and <a className="base--a" href="https://console.bluemix.net/docs/services/speech-to-text/output.html#output">spotted keywords</a>. {' '}
-          Some models can <a className="base--a" href="https://console.bluemix.net/docs/services/speech-to-text/output.html#output">detect multiple speakers</a>; this may slow down performance.
-        </div>
-
-
-        <div className="flex setup">
-          <div className="column">
-
-            <p>Voice Model:
-              <ModelDropdown
-                model={this.state.model}
-                token={this.state.token}
-                onChange={this.handleModelChange}
-              />
-            </p>
-
-            <p className={this.supportsSpeakerLabels() ? 'base--p' : 'base--p_light'}>
-              <input
-                className="base--checkbox"
-                type="checkbox"
-                checked={this.state.speakerLabels}
-                onChange={this.handleSpeakerLabelsChange}
-                disabled={!this.supportsSpeakerLabels()}
-                id="speaker-labels"
-              />
-              <label className="base--inline-label" htmlFor="speaker-labels">
-                Detect multiple speakers {this.supportsSpeakerLabels() ? '' : ' (Not supported on current model)'}
-              </label>
-            </p>
-
-          </div>
-          <div className="column">
-
-            <p>Keywords to spot: <input
-              value={this.state.keywords}
-              onChange={this.handleKeywordsChange}
-              type="text"
-              id="keywords"
-              placeholder="Type comma separated keywords here (optional)"
-              className="base--input"
-            /></p>
-
-          </div>
-        </div>
-
 
         <div className="flex buttons">
 
@@ -477,40 +490,25 @@ export default React.createClass({
             <Icon type={this.state.audioSource === 'mic' ? 'stop' : 'microphone'} fill={micIconFill} /> Record Audio
           </button>
 
-          <button className={buttonClass} onClick={this.handleUploadClick}>
-            <Icon type={this.state.audioSource === 'upload' ? 'stop' : 'upload'} /> Upload Audio File
-          </button>
-
-          <button className={buttonClass} onClick={this.handleSample1Click}>
-            <Icon type={this.state.audioSource === 'sample-1' ? 'stop' : 'play'} /> Play Sample 1
-          </button>
-
-          <button className={buttonClass} onClick={this.handleSample2Click}>
-            <Icon type={this.state.audioSource === 'sample-2' ? 'stop' : 'play'} /> Play Sample 2
-          </button>
+          
 
         </div>
 
+        {this.state.settingsAtStreamStart.speakerLabels
+              ? <SpeakersView messages={messages} />
+              : <Transcript messages={messages} />}
+
         {err}
+
+        <h2>Data Source</h2>
+        {this.getReports()}
+        <h2>Fields</h2>
+        {this.getFields()}
+        <h2>Filters</h2>
 
         <Tabs selected={0}>
           <Pane label="Text">
-            {this.state.settingsAtStreamStart.speakerLabels
-              ? <SpeakersView messages={messages} />
-              : <Transcript messages={messages} />}
-          </Pane>
-          <Pane label="Word Timings and Alternatives">
-            <TimingView messages={messages} />
-          </Pane>
-          <Pane label={`Keywords ${getKeywordsSummary(this.state.settingsAtStreamStart.keywords, messages)}`}>
-            <Keywords
-              messages={messages}
-              keywords={this.state.settingsAtStreamStart.keywords}
-              isInProgress={!!this.state.audioSource}
-            />
-          </Pane>
-          <Pane label="JSON">
-            <JSONView raw={this.state.rawMessages} formatted={this.state.formattedMessages} />
+            
           </Pane>
         </Tabs>
 

@@ -1,0 +1,13 @@
+Crear un reporte de Finanzas con Año Fiscal, Fondo y Monto.
+Crear un reporte de Recursos Humanos mostrando Grupo de Empleado, Subgrupo de Empleado, Org Unit y Salario.
+
+Agrega el campo Vicepresidencia.
+Agregar el campo Departamento.
+
+Filtra el reporte por Anño Fiscal igual a 2017.
+Filtra los datos por Grupo de Empleado igual a Argentina.
+Borrar todos los filtros.
+
+Cambia el tipo de reporte a Reporte de Torta.
+Cambia el tipo de reporte a Reporte de Lineas.
+

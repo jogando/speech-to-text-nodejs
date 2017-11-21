@@ -3,6 +3,25 @@ import PropTypes from 'prop-types';
 
 export default function SpeakersView(props) {
   try {
+    var lastMessage = props.messages[0].results[props.messages[0].results.length-1];
+    var results = "";
+
+    var hasEnded = false;
+    try{
+      if(lastMessage.speaker  != null && typeof lastMessage.speaker === 'number'){
+        hasEnded = true;
+      }
+    }
+    catch(ex){
+
+    }
+    var transcript = lastMessage.alternatives[0].transcript;
+    if(hasEnded){
+      transcript += "ended";
+    }
+    
+    results = transcript;
+    /*
     const results = props.messages.map(msg =>
       // When resultsBySpeaker is enabled, each msg.results array may contain multiple results.
       // The result_index is for the first result in the message,
@@ -18,7 +37,7 @@ export default function SpeakersView(props) {
             : '(Detecting speakers): '}</dt>
           <dd>{result.alternatives[0].transcript}</dd>
         </div>
-      ))).reduce((a, b) => a.concat(b), []); // the reduce() call flattens the array
+      ))).reduce((a, b) => a.concat(b), []); // the reduce() call flattens the array*/
     return (
       <dialog className="speaker-labels">
         {results}

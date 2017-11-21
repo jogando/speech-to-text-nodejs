@@ -14,3 +14,4 @@ Index.defaultProps = {
 Index.propTypes = {
   bluemixAnalytics: PropTypes.bool,
 };
+ 
